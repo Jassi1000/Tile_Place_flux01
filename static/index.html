@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tile Place – Flux AI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0ef;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      color: #888;
+      margin-bottom: 32px;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2e2e4a;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 540px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #a0a0c0;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .field input[type="file"],
+    .field select {
+      width: 100%;
+      background: #0f0f1a;
+      border: 1px solid #3a3a5a;
+      border-radius: 8px;
+      color: #e0e0ef;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field input[type="file"]:focus,
+    .field select:focus {
+      border-color: #a78bfa;
+    }
+
+    .field select option { background: #1a1a2e; }
+
+    .preview-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .preview-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preview-box span {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .preview-box img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #2e2e4a;
+      display: none;
+    }
+
+    button#generateBtn {
+      background: linear-gradient(90deg, #7c3aed, #2563eb);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.03em;
+    }
+
+    button#generateBtn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    button#generateBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    #status {
+      text-align: center;
+      font-size: 0.9rem;
+      min-height: 22px;
+      color: #a78bfa;
+    }
+
+    #status.error { color: #f87171; }
+
+    #resultSection {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    #resultSection h2 {
+      font-size: 1rem;
+      color: #a0a0c0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    #resultImage {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid #3a3a5a;
+    }
+
+    #downloadBtn {
+      background: #1a1a2e;
+      color: #a78bfa;
+      border: 1px solid #a78bfa;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+
+    #downloadBtn:hover { background: #2a1a4e; }
+  </style>
+</head>
+<body>
+  <h1>Tile Place</h1>
+  <p class="subtitle">AI-powered tile visualization using Flux&#8209;2</p>
+
+  <div class="card">
+    <div class="field">
+      <label for="roomInput">Room Image</label>
+      <input type="file" id="roomInput" accept="image/*" />
+    </div>
+
+    <div class="field">
+      <label for="tileInput">Tile Image</label>
+      <input type="file" id="tileInput" accept="image/*" />
+    </div>
+
+    <div class="preview-row">
+      <div class="preview-box">
+        <span>Room preview</span>
+        <img id="roomPreview" alt="Room preview" />
+      </div>
+      <div class="preview-box">
+        <span>Tile preview</span>
+        <img id="tilePreview" alt="Tile preview" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="surfaceSelect">Surface</label>
+      <select id="surfaceSelect">
+        <option value="floor">Floor</option>
+        <option value="front wall">Front Wall</option>
+        <option value="side wall">Side Wall</option>
+      </select>
+    </div>
+
+    <button id="generateBtn">Generate</button>
+
+    <div id="status"></div>
+
+    <div id="resultSection">
+      <h2>Result</h2>
+      <img id="resultImage" alt="AI generated result" />
+      <a id="downloadBtn" target="_blank" rel="noopener noreferrer">Download Image</a>
+    </div>
+  </div>
+
+  <script>
+    const roomInput = document.getElementById('roomInput');
+    const tileInput = document.getElementById('tileInput');
+    const roomPreview = document.getElementById('roomPreview');
+    const tilePreview = document.getElementById('tilePreview');
+    const surfaceSelect = document.getElementById('surfaceSelect');
+    const generateBtn = document.getElementById('generateBtn');
+    const statusEl = document.getElementById('status');
+    const resultSection = document.getElementById('resultSection');
+    const resultImage = document.getElementById('resultImage');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    function previewFile(input, imgEl) {
+      input.addEventListener('change', () => {
+        const file = input.files[0];
+        if (!file) { imgEl.style.display = 'none'; return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imgEl.src = e.target.result;
+          imgEl.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    previewFile(roomInput, roomPreview);
+    previewFile(tileInput, tilePreview);
+
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.className = isError ? 'error' : '';
+    }
+
+    generateBtn.addEventListener('click', async () => {
+      const roomFile = roomInput.files[0];
+      const tileFile = tileInput.files[0];
+
+      if (!roomFile) { setStatus('Please select a room image.', true); return; }
+      if (!tileFile) { setStatus('Please select a tile image.', true); return; }
+
+      generateBtn.disabled = true;
+      resultSection.style.display = 'none';
+      setStatus('Uploading images…');
+
+      let roomUrl, tileUrl;
+
+      try {
+        const formData = new FormData();
+        formData.append('room_image', roomFile);
+        formData.append('tile_image', tileFile);
+
+        const uploadRes = await fetch('/upload', { method: 'POST', body: formData });
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json().catch(() => ({ detail: 'Upload failed' }));
+          throw new Error(err.detail || 'Upload failed');
+        }
+        const uploadData = await uploadRes.json();
+        roomUrl = uploadData.room_url;
+        tileUrl = uploadData.tile_url;
+      } catch (err) {
+        setStatus(`Upload error: ${err.message}`, true);
+        generateBtn.disabled = false;
+        return;
+      }
+
+      setStatus('Processing with AI… this may take up to 30 seconds.');
+
+      try {
+        const processRes = await fetch('/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            room_url: roomUrl,
+            tile_url: tileUrl,
+            surface: surfaceSelect.value,
+          }),
+        });
+
+        if (!processRes.ok) {
+          const err = await processRes.json().catch(() => ({ detail: 'Processing failed' }));
+          throw new Error(err.detail || 'Processing failed');
+        }
+
+        const processData = await processRes.json();
+        const outputUrl = processData.output_url;
+
+        resultImage.src = outputUrl;
+        downloadBtn.href = outputUrl;
+        resultSection.style.display = 'flex';
+        setStatus('Done! Your tiled room is ready.');
+      } catch (err) {
+        setStatus(`Processing error: ${err.message}`, true);
+      } finally {
+        generateBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
